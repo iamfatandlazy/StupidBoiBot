@@ -1,0 +1,2 @@
+# StupidBoiBot
+Stupid Discord bot 
