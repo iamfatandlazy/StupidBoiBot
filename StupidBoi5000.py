@@ -25,6 +25,7 @@ cmdPrefix = data['cmd_prefix']
 soundTime = data['sound_time']
 noSoundTimer = data['no_sound_timer']
 disabledIntros = data['user_disabled_intro']
+blockedChannels = data['blocked_channels']
 
 
 #setup discord client
@@ -107,17 +108,45 @@ async def intro_toggle(ctx):
 async def set_max_sound(ctx, time):
 	global soundTime
 	await ctx.message.delete()
+	dm = ctx.author.dm_channel
+	if dm is None:
+		await ctx.author.create_dm()
+		dm = ctx.author.dm_channel
 	if ctx.message.author.name in adminUsers:
 		update_JSON("sound_time",time)
 		soundTime = data['sound_time']
 		print('Set max sound to {}'.format(time))
+		dm.send('Set max sound to {}'.format(time))
 	else:
-		dm = ctx.author.dm_channel
-		if dm is None:
-			await ctx.author.create_dm()
-			dm = ctx.author.dm_channel
 		await dm.send('You do not have permissions to use this command!')
 		print('{} tried to use maxSound command'.format(ctx.author.name))
+		
+		
+#adminUsers can change the length of sound clips allowed to play
+@bot.command(name='maxTimer', help='Toggles the maxTimer for user')
+async def set_max_sound(ctx, user):
+	global noSoundTimer
+	await ctx.message.delete()
+	dm = ctx.author.dm_channel
+	if dm is None:
+		await ctx.author.create_dm()
+		dm = ctx.author.dm_channel
+	if ctx.message.author.name in adminUsers:
+		if user not in noSoundTimer:
+			noSoundTimer.append(user)
+			print('Toggled {}\'s max sound timer off'.format(user))
+			dm.send('Toggled {}\'s max sound timer off'.format(user))
+		elif user in noSoundTimer:
+			noSoundTimer.remove(user)
+			print('Toggled {}\'s max sound timer on'.format(user))
+			dm.send('Toggled {}\'s max sound timer on'.format(user))
+		update_JSON("no_sound_timer",noSoundTimer)
+		refresh_config
+		soundTime = data['no_sound_timer']
+	else:
+		await dm.send('You do not have permissions to use this command!')
+		print('{} tried to use maxTimer command'.format(ctx.author.name))
+		
 
 #if admin uses command, will add user to bot admin list		
 @bot.command(name='AddAdmin', help='Allows admin user to add another admin user')
@@ -162,8 +191,46 @@ async def remove_admin(ctx, _name):
 		else:
 			await dm.send('You do not have permissions to use this command!')
 			print('{} tried to use RemoveAdmin command'.format(ctx.author._name))
+			
+@bot.command(name='BlockedChannels', help='Lists channels the bot is currently blocked from entering')
+async def blocked_channels(ctx, channel=None):
+	global blockedChannels
+	refresh_config()
+	blockedChannels = data['blocked_channels']
+	await ctx.message.delete()
+	dm = ctx.author.dm_channel
+	if dm is None:
+		await ctx.author.create_dm()
+		dm = ctx.author.dm_channel
+	if ctx.message.author.name in adminUsers:
+		if channel is not None:
+			if channel in blockedChannels:
+				blockedChannels.remove(channel)
+				update_JSON('blocked_channels',blockedChannels)
+				refresh_config()
+				blockedChannels = data['blocked_channels']
+				await dm.send('Removed {} from blocked channels list'.format(channel))
+				print ('Removed {} from blocked channels list'.format(channel))
+				
+			else:
+				blockedChannels.append(channel)
+				update_JSON('blocked_channels',blockedChannels)
+				refresh_config()
+				blockedChannels = data['blocked_channels']
+				await dm.send('Added {} to blocked channels list'.format(channel))
+				print ('Added {} to blocked channels list'.format(channel))
+		else:
+			tmpString = ''
+			for entry in blockedChannels:
+				tmpString = tmpString + '{}\n'.format(entry)
+			await dm.send('Blocked channels:\n\n{}'.format(tmpString))
+		
+	else:
+		await dm.send('You do not have permissions to use this command!')
+		print('{} tried to use BlockedChannels command'.format(ctx.author._name))
+		
 
-
+		
 #checks if name is in no sleep timer list, if so return True
 def has_no_sleep_timer(name):
 	global noSoundTimer
@@ -177,6 +244,7 @@ def has_no_sleep_timer(name):
 				
 #checks if channel name is in blocked channels list and returns false if it is				
 def check_channel_if_allowed(channelName):
+	global clockedChannels
 	refresh_config()
 	blockedChannels=data['blocked_channels']
 	
