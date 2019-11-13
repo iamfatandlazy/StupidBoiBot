@@ -9,6 +9,5 @@
     "CHANNEL NAMES BOT IS BLOCKED FROM"
   ],
   "sound_time": "7",
-  "no_sound_timer": ["users with no sound limit enforced on entry sound"],
-  "member_join_msg": "Welcome message use {} for users name"
+  "no_sound_timer": ["users with no sound limit enforced on entry sound"]
 }

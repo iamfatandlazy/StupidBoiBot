@@ -21,7 +21,6 @@ data=json.load(config_file)
 #assign values to vars	
 token = data['discord_token']
 adminUsers = data['admin_user']
-memberJoinMsg = data['member_join_msg']
 cmdPrefix = data['cmd_prefix']
 soundTime = data['sound_time']
 noSoundTimer = data['no_sound_timer']
@@ -40,12 +39,6 @@ print('David\'s StupidBot5000 launching...')
 async def on_ready():
 	print('{} has connected to Discord!'.format(bot.user))
 	await bot.change_presence(activity=discord.Game(name='$help'))
-
-
-@bot.event		
-async def on_member_join(member):
-	await member.create_dm()
-	await member.dm_channel.send(memberJoinMsg.format(member.nick))
 		
 
 #when user moves channel play their intro sound
