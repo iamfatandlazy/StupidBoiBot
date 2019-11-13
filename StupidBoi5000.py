@@ -116,7 +116,7 @@ async def set_max_sound(ctx, time):
 		update_JSON("sound_time",time)
 		soundTime = data['sound_time']
 		print('Set max sound to {}'.format(time))
-		dm.send('Set max sound to {}'.format(time))
+		await dm.send('Set max sound to {}'.format(time))
 	else:
 		await dm.send('You do not have permissions to use this command!')
 		print('{} tried to use maxSound command'.format(ctx.author.name))
@@ -135,11 +135,11 @@ async def set_max_sound(ctx, user):
 		if user not in noSoundTimer:
 			noSoundTimer.append(user)
 			print('Toggled {}\'s max sound timer off'.format(user))
-			dm.send('Toggled {}\'s max sound timer off'.format(user))
+			await dm.send('Toggled {}\'s max sound timer off'.format(user))
 		elif user in noSoundTimer:
 			noSoundTimer.remove(user)
 			print('Toggled {}\'s max sound timer on'.format(user))
-			dm.send('Toggled {}\'s max sound timer on'.format(user))
+			await dm.send('Toggled {}\'s max sound timer on'.format(user))
 		update_JSON("no_sound_timer",noSoundTimer)
 		refresh_config
 		soundTime = data['no_sound_timer']
