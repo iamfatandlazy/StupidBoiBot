@@ -20,3 +20,5 @@ no_sound_timer: An array of users with the sound time limit disabled.
 commands can be found by using the $help command. Make sure you are in the admin_user list to be able to use all commands!
 
 create a 'sounds' folder in the directory of the script. Add .mp3 files with the username of who it will play for (capitalization counts!)
+
+Reliant on Discord.py and FFmpegPCMAudio dependencies 
