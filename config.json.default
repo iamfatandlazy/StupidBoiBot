@@ -1,0 +1,14 @@
+{
+  "cmd_prefix": "$",
+  "user_disabled_intro": [],
+  "discord_token": "BOT_DISCORD_TOKEN",
+  "admin_user": [
+    "ADMIN_USERNAME(NO #TAG)"
+  ],
+  "blocked_channels": [
+    "CHANNEL NAMES BOT IS BLOCKED FROM"
+  ],
+  "sound_time": "7",
+  "no_sound_timer": ["users with no sound limit enforced on entry sound"],
+  "member_join_msg": "Welcome message use {} for users name"
+}
