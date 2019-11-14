@@ -1,6 +1,7 @@
 {
   "cmd_prefix": "$",
   "user_disabled_intro": [],
+  "max_file_size":"3000000",
   "discord_token": "BOT_DISCORD_TOKEN",
   "admin_user": [
     "ADMIN_USERNAME(NO #TAG)"

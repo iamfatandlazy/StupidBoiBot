@@ -26,6 +26,7 @@ soundTime = data['sound_time']
 noSoundTimer = data['no_sound_timer']
 disabledIntros = data['user_disabled_intro']
 blockedChannels = data['blocked_channels']
+fileSizeAllowed = data['max_file_size']
 
 
 #setup discord client
@@ -191,10 +192,12 @@ async def remove_admin(ctx, _name):
 		else:
 			await dm.send('You do not have permissions to use this command!')
 			print('{} tried to use RemoveAdmin command'.format(ctx.author._name))
+
 			
 @bot.command(name='BlockedChannels', help='Lists channels the bot is currently blocked from entering')
 async def blocked_channels(ctx, channel=None):
 	global blockedChannels
+	global data
 	refresh_config()
 	blockedChannels = data['blocked_channels']
 	await ctx.message.delete()
@@ -228,7 +231,54 @@ async def blocked_channels(ctx, channel=None):
 	else:
 		await dm.send('You do not have permissions to use this command!')
 		print('{} tried to use BlockedChannels command'.format(ctx.author._name))
+
+@bot.command(name='MaxFileSize', help='Sets max file size bot will accept for your intro sound')
+async def max_file_size(ctx, size):
+	global fileSizeAllowed
+	global data
+	await ctx.message.delete()
+	dm = ctx.author.dm_channel
+	if dm is None:
+		await ctx.author.create_dm()
+		dm = ctx.author.dm_channel
+	if ((ctx.author.name in adminUsers) and (int(size)>0)):
+		update_JSON('max_file_size',size)
+		refresh_config()
+		fileSizeAllowed = data['max_file_size']
+		await dm.send('Changed max file size to {}'.format(size))
+	else:
+		await dm.send('You do not have permissions to use this command!')
+		print ('{} tried to use MaxFileSize command'.format(ctx.author.name))
+
+#DM the bot a .mp3 file and it will make it your intro tune!
+@bot.event
+async def on_message(message):
+	global fileSizeAllowed
+	if ((str(message.channel.type) == 'private') and (message.author.bot != True)):
+		dm = message.author.dm_channel
+		if dm is None:
+			await message.author.create_dm()
+			dm = message.author.dm_channel
+		attatchments = message.attachments
 		
+		if ((len(attatchments)!=0) and (len(attatchments)<2)):
+			if ((int(attatchments[0].size)<int(fileSizeAllowed)) and (attatchments[0].filename.endswith('.mp3'))):
+				user = message.author.name
+				fileName = fileDir +'/sounds/' + user + '.mp3'
+				print('File {} being saved'.format(attatchments[0].filename))
+				await attatchments[0].save(fileName)
+				print ('saved {} to sounds folder'.format(fileName))
+				await dm.send('Your intro sound was saved!')
+				
+			else:
+				await dm.send('I\'m sorry, I am too stupid to understand that. Please make sure you send only 1 .mp3 that is under 3mb')
+				print('Failed to save')
+		else:
+			await dm.send('I\'m sorry, I am too stupid to understand that. Please make sure you send only 1 .mp3 that is under {} bytes'.format(fileSizeAllowed))
+			print('Failed to save')
+				
+	
+	await bot.process_commands(message)
 
 		
 #checks if name is in no sleep timer list, if so return True
