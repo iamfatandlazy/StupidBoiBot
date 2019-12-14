@@ -24,3 +24,5 @@ commands can be found by using the $help command. Make sure you are in the admin
 create a 'sounds' folder in the directory of the script. Add .mp3 files with the username of who it will play for (capitalization counts!)
 
 Reliant on Discord.py and FFmpegPCMAudio dependencies 
+
+I can not gurantee how active I will be in further development of this bot.
