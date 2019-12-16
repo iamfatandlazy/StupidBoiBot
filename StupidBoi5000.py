@@ -49,7 +49,7 @@ async def on_voice_state_update(member,before,after):
 	if ((after.channel is not None)and(len(bot.voice_clients)==0)):
 		refresh_config()
 		disabledIntros = data['user_disabled_intro']
-		if ((before.channel!=after.channel)and(check_channel_if_allowed(after.channel.name))and(member.name not in disabledIntros)):
+		if ((before.channel!=after.channel)and(check_channel_if_allowed(after.channel.name))and(member.name not in disabledIntros)and(os.path.isfile(fileDir+'/sounds/{}.mp3'.format(member.name)))):
 			currentChannel=after.channel
 			await currentChannel.connect()
 			vcVal = 0
@@ -271,7 +271,7 @@ async def on_message(message):
 				await dm.send('Your intro sound was saved!')
 				
 			else:
-				await dm.send('I\'m sorry, I am too stupid to understand that. Please make sure you send only 1 .mp3 that is under 3mb')
+				await dm.send('I\'m sorry, I am too stupid to understand that. Please make sure you send only 1 .mp3 that is under {} bytes'.format(fileSizeAllowed))
 				print('Failed to save')
 		else:
 			await dm.send('I\'m sorry, I am too stupid to understand that. Please make sure you send only 1 .mp3 that is under {} bytes'.format(fileSizeAllowed))
