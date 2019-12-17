@@ -46,7 +46,7 @@ async def on_ready():
 #when user moves channel play their intro sound
 @bot.event
 async def on_voice_state_update(member,before,after):		
-	if ((after.channel is not None)and(len(bot.voice_clients)==0)):
+	if ((after.channel is not None)and(len(bot.voice_clients)==0)and (member.bot==False)):
 		refresh_config()
 		disabledIntros = data['user_disabled_intro']
 		if ((before.channel!=after.channel)and(check_channel_if_allowed(after.channel.name))and(member.name not in disabledIntros)and(os.path.isfile(fileDir+'/sounds/{}.mp3'.format(member.name)))):
