@@ -44,6 +44,12 @@ print('IAmFatAndLazy\'s StupidBot5000 launching...')
 
 @bot.event
 async def on_ready():
+	print('Checking for sounds folder')
+	if (os.path.exists(fileDir+'/sounds/')):
+		print('Sounds folder found!')
+	else:
+		os.mkdirs(fileDir+'/sounds')
+		print('No sounds folder found. Creating one now')
 	print('{} has connected to Discord!'.format(bot.user))
 	await bot.change_presence(activity=discord.Game(name='$help'))
 		
