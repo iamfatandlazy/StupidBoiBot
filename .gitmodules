@@ -1,0 +1,6 @@
+[submodule "lib/Discrod_py"]
+	path = lib/Discrod_py
+	url = https://github.com/Rapptz/discord.py
+[submodule "lib/DiscordPy"]
+	path = lib/DiscordPy
+	url = https://github.com/Rapptz/discord.py
