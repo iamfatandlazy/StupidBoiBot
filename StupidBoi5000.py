@@ -1,6 +1,7 @@
 # StupidBoi5000.py
-# My bot that will do many many dumb things
+# Author: IAmFatAndLazy
 
+from datetime import datetime
 import os
 import sys
 import random
@@ -11,6 +12,8 @@ from discord.ext import commands
 from discord.voice_client import VoiceClient
 
 import json
+import random
+
 
 #read config from file
 #get file directory to script and config file
@@ -27,6 +30,7 @@ noSoundTimer = data['no_sound_timer']
 disabledIntros = data['user_disabled_intro']
 blockedChannels = data['blocked_channels']
 fileSizeAllowed = data['max_file_size']
+maxSoundFiles = data['max_sound_files']
 
 
 #setup discord client
@@ -35,7 +39,8 @@ fileSizeAllowed = data['max_file_size']
 #setup commands
 bot = commands.Bot(command_prefix=cmdPrefix)
 
-print('David\'s StupidBot5000 launching...')
+print('IAmFatAndLazy\'s StupidBot5000 launching...')
+
 
 @bot.event
 async def on_ready():
@@ -48,8 +53,8 @@ async def on_ready():
 async def on_voice_state_update(member,before,after):		
 	if ((after.channel is not None)and(len(bot.voice_clients)==0)and (member.bot==False)):
 		refresh_config()
-		disabledIntros = data['user_disabled_intro']
-		if ((before.channel!=after.channel)and(check_channel_if_allowed(after.channel.name))and(member.name not in disabledIntros)and(os.path.isfile(fileDir+'/sounds/{}.mp3'.format(member.name)))):
+		user = member.name.lower()+'#'+member.discriminator 
+		if ((before.channel!=after.channel)and(check_channel_if_allowed(after.channel.name))and(user not in disabledIntros)and(os.path.exists(fileDir + '/sounds/' + user))and(len(os.listdir(fileDir+'/sounds/'+user))>0)):
 			currentChannel=after.channel
 			await currentChannel.connect()
 			vcVal = 0
@@ -57,8 +62,10 @@ async def on_voice_state_update(member,before,after):
 				if vc.guild==member.guild:
 					vcVal = i
 			if not bot.voice_clients[vcVal].is_playing():
-				bot.voice_clients[vcVal].play(discord.FFmpegPCMAudio(fileDir+'/sounds/{}.mp3'.format(member.name)))
-				print('Playing {}\'s intro sound!'.format(member.name))
+				#choose a random sound from their sound folder to play
+				files = os.listdir(fileDir+'/sounds/'+user)
+				bot.voice_clients[vcVal].play(discord.FFmpegPCMAudio(fileDir+'/sounds/'+user+'/'+random.choice(files)))
+				print('{} Playing {}\'s intro sound!'.format(datetime.now(), member.name))
 				timer = 0
 				enabledTimer = True
 				if has_no_sleep_timer(member.name)==True:
@@ -68,7 +75,8 @@ async def on_voice_state_update(member,before,after):
 					if enabledTimer==True:
 						timer+=1
 				await bot.voice_clients[vcVal].disconnect()
-
+		
+		
 #checks if bot is playing sound, then stops it
 @bot.command(name='silence', help='Silences bot if currently playing audio')
 async def silence_bot(ctx):
@@ -85,7 +93,7 @@ async def silence_bot(ctx):
 @bot.command(name='intro', help='Toggles your intro sound on/off')
 async def intro_toggle(ctx):
 	global disabledIntros
-	user = ctx.author.name
+	user = ctx.author.name+'#'+ctx.author.discriminator
 	await ctx.message.delete()
 	if user in disabledIntros:
 		disabledIntros.remove(user)
@@ -105,7 +113,7 @@ async def intro_toggle(ctx):
 		await dm.send('You have disabled your intro song! Back to your boring ordinary entrance!')
 
 #adminUsers can change the length of sound clips allowed to play
-@bot.command(name='maxSound', help='Sets max time sound file will play in seconds')
+@bot.command(name='maxSound', help='Sets the max time sound file will play in seconds.')
 async def set_max_sound(ctx, time):
 	global soundTime
 	await ctx.message.delete()
@@ -123,8 +131,8 @@ async def set_max_sound(ctx, time):
 		print('{} tried to use maxSound command'.format(ctx.author.name))
 		
 		
-#adminUsers can change the length of sound clips allowed to play
-@bot.command(name='maxTimer', help='Toggles the maxTimer for user')
+#adminUsers can toggle the sound timer for users
+@bot.command(name='maxTimer', help='Toggles the time limit for users sound on or off.')
 async def set_max_sound(ctx, user):
 	global noSoundTimer
 	await ctx.message.delete()
@@ -132,7 +140,7 @@ async def set_max_sound(ctx, user):
 	if dm is None:
 		await ctx.author.create_dm()
 		dm = ctx.author.dm_channel
-	if ctx.message.author.name in adminUsers:
+	if isAdmin(ctx.message.author):
 		if user not in noSoundTimer:
 			noSoundTimer.append(user)
 			print('Toggled {}\'s max sound timer off'.format(user))
@@ -142,23 +150,21 @@ async def set_max_sound(ctx, user):
 			print('Toggled {}\'s max sound timer on'.format(user))
 			await dm.send('Toggled {}\'s max sound timer on'.format(user))
 		update_JSON("no_sound_timer",noSoundTimer)
-		refresh_config
-		soundTime = data['no_sound_timer']
+		refresh_config()
 	else:
 		await dm.send('You do not have permissions to use this command!')
 		print('{} tried to use maxTimer command'.format(ctx.author.name))
 		
 
 #if admin uses command, will add user to bot admin list		
-@bot.command(name='AddAdmin', help='Allows admin user to add another admin user')
+@bot.command(name='AddAdmin', help='Allows admin users to add another admin user. Make sure to add the discord ID!')
 async def add_admin(ctx, _name):
 	global adminUsers
 	await ctx.message.delete()
-	if ((ctx.message.author.name in adminUsers)and(_name not in adminUsers)):
-		adminUsers.append(_name)
+	if ((isAdmin(ctx.message.author))and(_name.lower() not in (name.lower() for name in adminUsers))):
+		adminUsers.append(_name.lower())
 		update_JSON("admin_user",adminUsers)
 		refresh_config()
-		adminUsers = data['admin_user']
 		print('Added {} to admin list'.format(_name))
 	else:
 		dm = ctx.author.dm_channel
@@ -171,24 +177,21 @@ async def add_admin(ctx, _name):
 			await dm.send('You do not have permissions to use this command!')
 			print('{} tried to use AddAdmin command'.format(ctx.author._name))
 		
-##if admin uses command, will remove user to bot admin list		
+#if admin uses command, will remove user to bot admin list		
 @bot.command(name='RemoveAdmin', help='Allows admin user to remove another admin user')
 async def remove_admin(ctx, _name):
 	global adminUsers
 	await ctx.message.delete()
-	if ((ctx.message.author.name in adminUsers)and(_name in adminUsers)and(ctx.message.author.name!=_name)):
-		adminUsers.remove(_name)
+	if ((isAdmin(ctx.message.author))and(_name.lower() in (name.lower() for name in adminUsers))):
+		adminUsers.remove(_name.lower())
 		update_JSON("admin_user",adminUsers)
 		refresh_config()
-		adminUsers = data['admin_user']
 		print('Removed {} to admin list'.format(_name))
 	else:
 		dm = ctx.author.dm_channel
 		if dm is None:
 			await ctx.author.create_dm()
 			dm = ctx.author.dm_channel
-		if _name==ctx.message.author.name:
-			await dm.send('You can\'t remove yourself as admin via this command.'.format(_name))
 		else:
 			await dm.send('You do not have permissions to use this command!')
 			print('{} tried to use RemoveAdmin command'.format(ctx.author._name))
@@ -199,19 +202,17 @@ async def blocked_channels(ctx, channel=None):
 	global blockedChannels
 	global data
 	refresh_config()
-	blockedChannels = data['blocked_channels']
 	await ctx.message.delete()
 	dm = ctx.author.dm_channel
 	if dm is None:
 		await ctx.author.create_dm()
 		dm = ctx.author.dm_channel
-	if ctx.message.author.name in adminUsers:
+	if isAdmin(ctx.message.author):
 		if channel is not None:
 			if channel in blockedChannels:
 				blockedChannels.remove(channel)
 				update_JSON('blocked_channels',blockedChannels)
 				refresh_config()
-				blockedChannels = data['blocked_channels']
 				await dm.send('Removed {} from blocked channels list'.format(channel))
 				print ('Removed {} from blocked channels list'.format(channel))
 				
@@ -219,7 +220,6 @@ async def blocked_channels(ctx, channel=None):
 				blockedChannels.append(channel)
 				update_JSON('blocked_channels',blockedChannels)
 				refresh_config()
-				blockedChannels = data['blocked_channels']
 				await dm.send('Added {} to blocked channels list'.format(channel))
 				print ('Added {} to blocked channels list'.format(channel))
 		else:
@@ -241,34 +241,102 @@ async def max_file_size(ctx, size):
 	if dm is None:
 		await ctx.author.create_dm()
 		dm = ctx.author.dm_channel
-	if ((ctx.author.name in adminUsers) and (int(size)>0)):
+	if ((isAdmin(ctx.author)) and (int(size)>0)):
 		update_JSON('max_file_size',size)
 		refresh_config()
-		fileSizeAllowed = data['max_file_size']
 		await dm.send('Changed max file size to {}'.format(size))
 	else:
 		await dm.send('You do not have permissions to use this command!')
 		print ('{} tried to use MaxFileSize command'.format(ctx.author.name))
+		
+@bot.command(name='MaxFilesAllowed', help='Sets maximum amount of files bot will accept for your intro sound')
+async def max_file_size(ctx, size):
+	global maxSoundFiles
+	global data
+	await ctx.message.delete()
+	dm = ctx.author.dm_channel
+	if dm is None:
+		await ctx.author.create_dm()
+		dm = ctx.author.dm_channel
+	if ((isAdmin(ctx.author)) and (int(size)>1)):
+		update_JSON('max_sound_files',size)
+		refresh_config()
+		await dm.send('Changed maximum amount of files to {}'.format(size))
+	else:
+		await dm.send('You do not have permissions to use this command!')
+		print ('{} tried to use MaxFilesAllowed command'.format(ctx.author.name))
+
+
+#List user sounds to user
+@bot.command(name='MySound', help='Show user the sound files they have saved')
+async def show_user_sound(ctx):
+	if ((str(ctx.channel.type) == 'private') and (ctx.message.author.bot != True)):
+		user = ctx.message.author.name.lower() + '#' + ctx.message.author.discriminator
+		files = os.listdir(fileDir+'/sounds/'+user)
+		dm = ctx.author.dm_channel
+		if dm is None:
+			await ctx.author.create_dm()
+			dm = ctx.author.dm_channel
+		
+		dmString = ''
+		i = 1
+		for sounds in files:
+			dmString += '\n({}) {}'.format(i,sounds)
+			i+=1
+		
+		await dm.send(dmString)
+		
+#Allows user to remove files
+@bot.command(name='RemoveSound', help='Show user the sound files they have saved')
+async def remove_user_sound(ctx,_file):
+	if ((str(ctx.channel.type) == 'private') and (ctx.message.author.bot != True)):
+		user = ctx.message.author.name.lower() + '#' + ctx.message.author.discriminator
+		files = os.listdir(fileDir+'/sounds/'+user)
+		dm = ctx.author.dm_channel
+		if dm is None:
+			await ctx.author.create_dm()
+			dm = ctx.author.dm_channel
+		
+		removed = False
+		for sounds in files:
+			if _file==sounds:
+				os.remove(fileDir+'/sounds/'+user+'/'+_file)
+				removed = True
+		
+		if removed:
+			await dm.send('Successfully removed '+_file+'.')
+		else:
+			await dm.send('Failed to delete '+_file+'. Try using \'MySounds\' command to check the exact spelling.')
+		
 
 #DM the bot a .mp3 file and it will make it your intro tune!
-@bot.event
-async def on_message(message):
+@bot.command(name='AddSound', help='DM bot with this command and an attched .mp3 file to set your intro sound')
+async def add_sound(ctx):
 	global fileSizeAllowed
-	if ((str(message.channel.type) == 'private') and (message.author.bot != True)):
-		dm = message.author.dm_channel
+	if ((str(ctx.channel.type) == 'private') and (ctx.author.bot != True)):
+		dm = ctx.author.dm_channel
 		if dm is None:
-			await message.author.create_dm()
-			dm = message.author.dm_channel
-		attatchments = message.attachments
+			await ctx.author.create_dm()
+			dm = ctx.author.dm_channel
+		attatchments = ctx.message.attachments
 		
 		if ((len(attatchments)!=0) and (len(attatchments)<2)):
 			if ((int(attatchments[0].size)<int(fileSizeAllowed)) and (attatchments[0].filename.endswith('.mp3'))):
-				user = message.author.name
-				fileName = fileDir +'/sounds/' + user + '.mp3'
-				print('File {} being saved'.format(attatchments[0].filename))
-				await attatchments[0].save(fileName)
-				print ('saved {} to sounds folder'.format(fileName))
-				await dm.send('Your intro sound was saved!')
+				user = ctx.message.author.name.lower() + "#" + ctx.message.author.discriminator
+				#check if user sound file folder exists
+				if not os.path.exists(fileDir + '/sounds/' + user):
+					os.makedirs(fileDir + '/sounds/' + user)
+				#check how many files they currently have
+				files = os.listdir(fileDir+'/sounds/'+user)
+				if (len(files) < int(maxSoundFiles)):
+					fileName = fileDir + '/sounds/' + user + '/' + attatchments[0].filename.lower()
+					print('File {} being saved'.format(attatchments[0].filename))
+					await attatchments[0].save(fileName)
+					print ('saved {} to sounds folder'.format(fileName))
+					await dm.send('Your intro sound number {} was saved to your folder!'.format(len(files)+1))
+				else:
+					await dm.send("You have too many sound files already saved! there is a limit of {} files!".format(maxSoundFiles))
+					print('Failed to save due to too many files')
 				
 			else:
 				await dm.send('I\'m sorry, I am too stupid to understand that. Please make sure you send only 1 .mp3 that is under {} bytes'.format(fileSizeAllowed))
@@ -286,7 +354,6 @@ def has_no_sleep_timer(name):
 	global noSoundTimer
 	global data
 	refresh_config()
-	noSoundTimer = data['no_sound_timer']
 	for user in noSoundTimer:
 		if name==user:
 			return True
@@ -296,7 +363,6 @@ def has_no_sleep_timer(name):
 def check_channel_if_allowed(channelName):
 	global clockedChannels
 	refresh_config()
-	blockedChannels=data['blocked_channels']
 	
 	for	channel in blockedChannels:
 		if channelName.lower()==channel.lower():
@@ -310,6 +376,17 @@ def refresh_config():
 	config_file.close()
 	config_file = open(fileDir+'/config.json')
 	data=json.load(config_file)
+	
+	token = data['discord_token']
+	adminUsers = data['admin_user']
+	cmdPrefix = data['cmd_prefix']
+	soundTime = data['sound_time']
+	noSoundTimer = data['no_sound_timer']
+	disabledIntros = data['user_disabled_intro']
+	blockedChannels = data['blocked_channels']
+	fileSizeAllowed = data['max_file_size']
+	maxSoundFiles = data['max_sound_files']
+
 
 #for updating JSON fields and writting them to file
 def update_JSON(key, newVal):
@@ -322,14 +399,15 @@ def update_JSON(key, newVal):
 	wFile.close()
 	refresh_config()
 
-def is_admin(name):
-	refresh_config()
-	adminUsers = data['admin_user']
-	for user in admin_user:
-		if user==name:
-			return True
-	return False
-	
+#internal function to check admin name and discriminator to admin list
+def isAdmin(_author):
+	global adminUsers
+	disID = _author.name + "#" + _author.discriminator
+	if (disID.lower() in (name.lower() for name in adminUsers)):
+		return True
+	else:
+		return False
+		
 @bot.event
 async def on_client_error(ctx, error):
     if isinstance(error, discord.ClientException):
