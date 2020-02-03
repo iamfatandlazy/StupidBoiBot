@@ -11,4 +11,5 @@
   ],
   "sound_time": "7",
   "no_sound_timer": ["users with no sound limit enforced on entry sound"]
+  "max_sound_files": "5"
 }
