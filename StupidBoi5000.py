@@ -48,7 +48,7 @@ async def on_ready():
 	if (os.path.exists(fileDir+'/sounds/')):
 		print('Sounds folder found!')
 	else:
-		os.mkdirs(fileDir+'/sounds')
+		os.mkdir(fileDir+'/sounds')
 		print('No sounds folder found. Creating one now')
 	print('{} has connected to Discord!'.format(bot.user))
 	await bot.change_presence(activity=discord.Game(name='$help'))
