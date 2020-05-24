@@ -30,8 +30,8 @@ def ReadConfig(_filePath):
 		cfg.blockedChannels = data['blocked_channels']
 		cfg.fileSizeAllowed = data['max_file_size']
 		cfg.maxSoundFiles = data['max_sound_files']
-		
 		file.close()
+		
 		
 	except Exception as e:
 		cfg.Log('Failed to open config file!')
@@ -42,7 +42,7 @@ def ReadConfig(_filePath):
 def WriteToConfig(_filePath, _key, _newVal):
 	filePath = _filePath
 	key = _key
-	newVal = _key
+	newVal = _newVal
 	
 	try:
 		file = open(filePath)

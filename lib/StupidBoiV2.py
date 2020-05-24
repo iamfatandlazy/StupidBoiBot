@@ -86,12 +86,15 @@ async def on_voice_state_update(member,before,after):
 						
 				#check if the bot is already playing anything
 				if not bot.voice_clients[vcVal].is_playing():
-					#choose a random sound from their sound folder to play
-					files = os.listdir(cfg.soundsPath+'/'+user)
-					song = random.choice(files)
-					bot.voice_clients[vcVal].play(discord.FFmpegPCMAudio(cfg.soundsPath+'/'+user+'/'+song))
-					cfg.Log('Playing {}\'s intro sound: {}'.format(member.name,song))
-					
+					try:
+						#choose a random sound from their sound folder to play
+						files = os.listdir(cfg.soundsPath+'/'+user)
+						song = random.choice(files)
+						bot.voice_clients[vcVal].play(discord.FFmpegPCMAudio(cfg.soundsPath+'/'+user+'/'+song))
+						cfg.Log('Playing {}\'s intro sound: {}'.format(member.name,song))
+					except Exception as e:
+						cfg.Log('Failled to play {}\'s intro sound:{}'.format(member.name,e))
+						
 					#timer to allowe limited time for audio to play
 					timer = 0
 					enabledTimer = True
@@ -107,49 +110,345 @@ async def on_voice_state_update(member,before,after):
 							
 					#Bot disconnects from voice channel
 					await bot.voice_clients[vcVal].disconnect()		
-				
+		
+
+		
+################################################################
+#ALL CHANNEL ACTIVATED COMMANDS
+#checks if bot is playing sound, then stops it
+@bot.command(name='Silence', help='Silences the bot if it is currently playing audio')
+async def silence_bot(ctx):
+	vcVal = 0
+	await ctx.message.delete()
+	for i, vc in enumerate(bot.voice_clients):
+		if vc.guild==ctx.guild:
+			vcVal = i
+	if bot.voice_clients[vcVal].is_playing():
+		bot.voice_clients[vcVal].stop()
+		cfg.Log(ctx.message.author.name+' silenced bot')
+
 
 
 ################################################################
 #THESE ARE DM COMMANDS
+
+
+
+
+#Personal user settings section
+###############################
+#add/remove user from disabled intro's list, 		
+@bot.command(name='Intro', help='Toggles your intro sound on/off')
+async def intro_toggle(ctx):
+	#Check if message is a dm
+	if ((str(ctx.channel.type) == 'private') and (ctx.author.bot != True)):
+		dm = ctx.author.dm_channel
+		if dm is None:
+			try:
+				await ctx.author.create_dm()
+				dm = ctx.author.dm_channel
+			except Exception as e:
+				cfg.Log('Error opening DM channel:'+e)
+
+		#Get user ID
+		user = str(ctx.author.id)
+		
+		#if user has disabled intro, enable it
+		if user in cfg.disabledIntros:
+			cfg.disabledIntros.remove(user)
+			await dm.send('You have enabled your intro song(s).')
+			cfg.Log(user+' has enabled their intro sound.')
+		#if user has an enabled sound, disable it
+		else:
+			cfg.disabledIntros.append(user)
+			await dm.send('You have disabled your intro song(s).')
+			cfg.Log(user+' has disabled their intro sound.')
+			
+		#Write changes to config file	
+		JSONreader.WriteToConfig(cfg.configPath,'user_disabled_intro',cfg.disabledIntros)
+
+
+#Admin only commands
+###############################
+#if admin uses command, will add user to bot admin list		
+@bot.command(name='AddAdmin', help='(Admin) Add another admin user. Uses account DiscordID NOT Username!')
+async def add_admin(ctx, _userID):
+	#Check if message is a dm
+	if ((str(ctx.channel.type) == 'private') and (ctx.author.bot != True)):
+		dm = ctx.author.dm_channel
+		if dm is None:
+			try:
+				await ctx.author.create_dm()
+				dm = ctx.author.dm_channel
+			except Exception as e:
+				cfg.Log('Error opening DM channel:'+e)
+				
+
+	#If the user who used the command is an admin and the userID he presented is not already in the adminUsers file
+	if (str(ctx.message.author.id) in cfg.adminUsers)and(_userID not in cfg.adminUsers):
+		cfg.adminUsers.append(_userID)
+		#Write new admin to the config file
+		JSONreader.WriteToConfig(cfg.configPath,"admin_user",cfg.adminUsers)
+		cfg.Log('{} added {} to admin list'.format(ctx.message.author.name,_userID))
+		await dm.send('{} has been added to the admin list.'.format(_userID))
+	else:
+		#If the userID is already and admin alert the user
+		if _userID in cfg.adminUsers:
+			await dm.send('{} is already an admin.'.format(_userID))
+		#Otherwise the user must not be an admin, as so alert them of this and log the attempt
+		else:
+			await dm.send('You do not have permissions to use this command!')
+			cfg.Log('{} tried to add {} as an admin but was denied access.'.format(ctx.message.author.name, _userID))
+
+
+#if admin uses command, will remove user from admin list		
+@bot.command(name='RemoveAdmin', help='(Admin) Remove another admin user')
+async def remove_admin(ctx, _userID):
+	#Check if message is a dm
+	if ((str(ctx.channel.type) == 'private') and (ctx.author.bot != True)):
+		dm = ctx.author.dm_channel
+		if dm is None:
+			try:
+				await ctx.author.create_dm()
+				dm = ctx.author.dm_channel
+			except Exception as e:
+				cfg.Log('Error opening DM channel:'+e)
+				
+
+	#If the user who used the command is an admin and the userID he presented is not already in the adminUsers file
+	if (str(ctx.message.author.id) in cfg.adminUsers)and(_userID in cfg.adminUsers):
+		cfg.adminUsers.remove(_userID)
+		#Write new admin to the config file
+		JSONreader.WriteToConfig(cfg.configPath,"admin_user",cfg.adminUsers)
+		cfg.Log('{} removed {} to admin list'.format(ctx.message.author.name,_userID))
+		await dm.send('{} has been removed from the admin list.'.format(_userID))
+	else:
+		#If the userID is already and admin alert the user
+		if _userID not in cfg.adminUsers:
+			await dm.send('{} is not an admin.'.format(_userID))
+		#Otherwise the user must not be an admin, as so alert them of this and log the attempt
+		else:
+			await dm.send('You do not have permissions to use this command!')
+			cfg.Log('{} tried to remove {} as an admin but was denied access.'.format(ctx.message.author.name, _userID))
+			
+
+#Lists all admin users along with their UserID for easy management/removal
+@bot.command(name='ListAdmins', help='(Admin) View the list of admins')
+async def list_admins(ctx):
+	#Check if message is a dm
+	if ((str(ctx.channel.type) == 'private') and (ctx.author.bot != True)):
+		dm = ctx.author.dm_channel
+		if dm is None:
+			try:
+				await ctx.author.create_dm()
+				dm = ctx.author.dm_channel
+			except Exception as e:
+				cfg.Log('Error opening DM channel:'+e)
+				
+	if (str(ctx.message.author.id) in cfg.adminUsers):
+		stringBld = 'Admin users:\n\n'
+		for id in cfg.adminUsers:
+			stringBld +='<@!'+id+'> ID:'+id+'\n'
+		
+		await dm.send(stringBld)
+
+
+#Default: Lists channels the bot is not allowed to enter. with optional parameter adding/removing the channel from the list
+@bot.command(name='BlockedChannels', help='(Admin) Lists channels the bot is currently blocked from entering. Add a channel name after the command to add/remove a channel from this list.')
+async def blocked_channels(ctx, channel=None):
+	#Check if message is a dm
+	if ((str(ctx.channel.type) == 'private') and (ctx.author.bot != True)):
+		dm = ctx.author.dm_channel
+		if dm is None:
+			try:
+				await ctx.author.create_dm()
+				dm = ctx.author.dm_channel
+			except Exception as e:
+				cfg.Log('Error opening DM channel:'+e)
+				
+				
+	if str(ctx.message.author.id) in cfg.adminUsers:
+		#if channel name is passed to command
+		if channel is not None:
+		
+			#if the channels in the list remove it
+			if channel in cfg.blockedChannels:
+				cfg.blockedChannels.remove(channel)
+				JSONreader.WriteToConfig(cfg.configPath,'blocked_channels',cfg.blockedChannels)
+				
+				await dm.send('Removed {} from blocked channels list'.format(channel))
+				cfg.Log('{} removed {} from blocked channels list'.format(ctx.message.author.name,channel))
+				
+			#if the channel is not in the list add it	
+			else:
+				cfg.blockedChannels.append(channel)
+				JSONreader.WriteToConfig(cfg.configPath,'blocked_channels',cfg.blockedChannels)
+				await dm.send('Added {} to blocked channels list'.format(channel))
+				cfg.Log('{} added {} to blocked channels list'.format(ctx.message.author.name,channel))
+				
+		#if no argument passed to command		
+		else:
+			tmpString = ''
+			for entry in cfg.blockedChannels:
+				tmpString = tmpString + '{}\n'.format(entry)
+			await dm.send('Blocked channels:\n\n{}'.format(tmpString))
+		
+	else:
+		await dm.send('You do not have permissions to use this command!')
+		cfg.Log('{} tried to use BlockedChannels command'.format(ctx.author.name))
+
+
+#Allows admin users to set what the max file size of sound files is allowed		
+@bot.command(name='MaxFileSize', help='(Admin) Sets maximum file size bot will accept for sound files')
+async def max_file_size(ctx, size):
+	#Check if message is a dm
+	if ((str(ctx.channel.type) == 'private') and (ctx.author.bot != True)):
+		dm = ctx.author.dm_channel
+		if dm is None:
+			try:
+				await ctx.author.create_dm()
+				dm = ctx.author.dm_channel
+			except Exception as e:
+				cfg.Log('Error opening DM channel:'+e)
+				
+	#If invoker is an admin user and the file size is more than 0			
+	if (str(ctx.author.id) in cfg.adminUsers) and (int(size)>0):
+	
+		JSONreader.WriteToConfig(cfg.configPath,'max_file_size',size)
+		await dm.send('Changed max file size to {} bytes'.format(size))
+		cfg.Log('{} changed the max file size to {} bytes'.format(ctx.author.name,size))
+		
+	else:
+		await dm.send('You do not have permissions to use this command!')
+		cfg.Log('{} tried to use MaxFileSize command'.format(ctx.author.name))
+
+#Allows admin users to set the max amount of sound files users can have saved
+@bot.command(name='MaxFilesAllowed', help='(Admin) Sets maximum amount of files bot will allow users to have at once')
+async def max_files_allowed(ctx, size):
+	#Check if message is a dm
+	if ((str(ctx.channel.type) == 'private') and (ctx.author.bot != True)):
+		dm = ctx.author.dm_channel
+		if dm is None:
+			try:
+				await ctx.author.create_dm()
+				dm = ctx.author.dm_channel
+			except Exception as e:
+				cfg.Log('Error opening DM channel:'+e)
+				
+				
+	if (str(ctx.author.id) in cfg.adminUsers) and (int(size)>1):
+		JSONreader.WriteToConfig(cfg.configPath,'max_sound_files',size)
+		await dm.send('Changed maximum amount of files to {}'.format(size))
+		cfg.Log('{} changed the max amount of files to {}'.format(ctx.author.name,size))
+	else:
+		await dm.send('You do not have permissions to use this command!')
+		cfg.Log('{} tried to use MaxFilesAllowed command'.format(ctx.author.name))	
+
+		
+#Allow admin users to re-load config file manually
+@bot.command(name='ReloadConfig', help='(Admin) Reloads configuration file manually')
+async def reload_config(ctx):
+	#Check if message is a dm
+	if ((str(ctx.channel.type) == 'private') and (ctx.author.bot != True)):
+		dm = ctx.author.dm_channel
+		if dm is None:
+			try:
+				await ctx.author.create_dm()
+				dm = ctx.author.dm_channel
+			except Exception as e:
+				cfg.Log('Error opening DM channel:'+e)
+				
+				
+	if (str(ctx.author.id) in cfg.adminUsers):
+		JSONreader.ReadConfig(configPath)
+	else:
+		await dm.send('You do not have permissions to use this command!')
+		cfg.Log('{} tried to use ReloadConfig command'.format(ctx.author.name))		
+		
+
+#Updates sound folder names to support new naming scheme from V1
+@bot.command(name='Migrate', help='(Admin) Migrates all users sound folders to new naming scheme')
+async def migrate(ctx):
+	#Check if message is a dm
+	if ((str(ctx.channel.type) == 'private') and (ctx.author.bot != True)):
+		dm = ctx.author.dm_channel
+		if dm is None:
+			try:
+				await ctx.author.create_dm()
+				dm = ctx.author.dm_channel
+			except Exception as e:
+				cfg.Log('Error opening DM channel:'+e)
+				
+				
+	userid = str(ctx.author.id)
+	username = str(ctx.author.name+'#'+ctx.author.discriminator).lower()
+	
+	if (userid in cfg.adminUsers):
+		folders = os.listdir(cfg.soundsPath)
+		tempStr = ''
+		for folder in folders:
+			if folder==username:
+				try:
+					os.rename(cfg.soundsPath+'/'+folder,cfg.soundsPath+'/'+userid)
+					tempStr+=folder+' --> '+userid+'\n'
+				except Exception as e:
+					cfg.Log('Failed to rename {}\'s folder:{}'.format(username,e))
+		await dm.send('The following folders have been migrated successfully:\n\n'+tempStr)
+		cfg.Log('{} Migrated the following folder successfully:\n\n{}'.format(ctx.author.name,tempStr))
+	else:
+		await dm.send('You do not have permissions to use this command!')
+		cfg.Log('{} tried to use ReloadConfig command'.format(ctx.author.name))	
+
+		
+#Sound modifications section
+###############################
 #Allows users to add a sound to their account 
 #DM the bot a .mp3 file and it will make it your intro tune. 
-@bot.command(name='AddSound', help='DM bot with this command and an attched .mp3 file to set your intro sound')
+@bot.command(name='AddSound', help='Attach a .mp3 file with this command as a comment to add it to your sounds folder')
 async def add_sound(ctx):
-	cfg.fileSizeAllowed
 	#Check if the message is a DM
 	if ((str(ctx.channel.type) == 'private') and (ctx.author.bot != True)):
 		dm = ctx.author.dm_channel
 		if dm is None:
-			await ctx.author.create_dm()
-			dm = ctx.author.dm_channel
-			
+			try:
+				await ctx.author.create_dm()
+				dm = ctx.author.dm_channel
+			except Exception as e:
+				cfg.Log('Error opening DM channel:'+e)
+				
 		#Grab the message attachments
 		attatchments = ctx.message.attachments
 		
 		#if there is less than the max sound files allowed
 		if ((len(attatchments)!=0) and (len(attatchments)<int(cfg.maxSoundFiles))):
-			#if the attatchment is within the allowed file size and is a .mp3
-			if ((int(attatchments[0].size)<int(cfg.fileSizeAllowed)) and (attatchments[0].filename.endswith('.mp3'))):
 			
-				user = str(ctx.message.author.id)
+			user = str(ctx.message.author.id)
 				
-				#check if user sound file folder exists, if not make one
-				if not os.path.exists(cfg.soundsPath+'/'+ user):
+			#check if user sound file folder exists, if not make one
+			if not os.path.exists(cfg.soundsPath+'/'+ user):
+				try:
 					os.makedirs(cfg.soundsPath+'/'+ user)
-					
-				#check how many files they currently have
-				files = os.listdir(cfg.soundsPath+'/'+user)
+				except Exception as e:
+					cfg.Log('Error making user sound folder:'+e)
+						
+			#check how many files they currently have
+			files = os.listdir(cfg.soundsPath+'/'+user)
 				
-				#work through each attachment
-				for song in attatchments:
+			#work through each attachment
+			for song in attatchments:
+				#check if file is within allowd size and is an mp3
+				if (int(song.size)<int(cfg.fileSizeAllowed)) and (song.fileName.endswith('.mp3')):
 					#check if user is allowed more files
 					if (len(files) < int(cfg.maxSoundFiles)):
-						fileName = cfg.soundsPath+'/' + user + '/' + song.filename.lower()
-						cfg.Log('{}\'s file {} being saved'.format(user,song.filename))
-						await song.save(fileName)
-						cfg.Log('saved {} to {}\'s sound folder'.format(song.filename,user))
-						await dm.send('Your intro sound number {} was saved to your folder!'.format(len(files)+1))
+						try:
+							fileName = cfg.soundsPath+'/' + user + '/' + song.filename.lower()
+							cfg.Log('{}\'s file {} being saved'.format(user,song.filename))
+							await song.save(fileName)
+							cfg.Log('saved {} to {}\'s sound folder'.format(song.filename,user))
+							await dm.send('Your intro sound number {} was saved to your folder!'.format(len(files)+1))
+						except Exception as e:
+							cfg.Log('Error saving sound:'+e)
+							
 					else:
 						await dm.send("You have too many sound files already saved! there is a limit of {} files!".format(cfg.maxSoundFiles))
 						cfg.Log('Failed to save due to too many files')
@@ -212,6 +511,8 @@ async def show_user_sound(ctx):
 			i+=1
 		
 		await dm.send(dmString)
+
+
 
 
 #############################################################
