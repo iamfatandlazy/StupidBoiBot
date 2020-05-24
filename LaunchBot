@@ -1,5 +1,5 @@
 #!/bin/bash
 
-python3 StupidBoi5000.py
+python3 lib/StupidBoiV2.py
 
 $SHELL

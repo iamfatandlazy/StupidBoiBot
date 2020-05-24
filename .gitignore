@@ -1,2 +1,4 @@
 config.json
 sounds/*.mp3
+lib/dependencies.txt
+lib/_pycache_/*
