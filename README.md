@@ -1,3 +1,5 @@
+Dev branch has V2 incoming with numerous improvements in terms of readability, QOL improvements and bug fixes. Dev branch will be pretty stable but lacking features as it's rebuilt.
+
 # StupidBoiBot
 *Stupid Discord bot that I created because I couldn't find something like it already implemented.*    
 
