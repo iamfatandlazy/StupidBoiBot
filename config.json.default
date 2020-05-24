@@ -4,7 +4,7 @@
   "max_file_size":"3000000",
   "discord_token": "BOT_DISCORD_TOKEN",
   "admin_user": [
-    "ADMIN_USERNAME#9999"
+    "USERID"
   ],
   "blocked_channels": [
     "CHANNEL NAMES BOT IS BLOCKED FROM"
