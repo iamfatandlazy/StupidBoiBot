@@ -490,9 +490,9 @@ async def add_sound(ctx):
 						await dm.send("You have too many sound files already saved! there is a limit of {} files!".format(cfg.maxSoundFiles))
 						cfg.Log('Failed to save due to too many files')
 				
-			else:
-				await dm.send('Please make sure you send only .mp3 files that are under {} bytes'.format(cfg.fileSizeAllowed))
-				print('Failed to save')
+		else:
+			await dm.send('Please make sure you send only .mp3 files that are under {} bytes'.format(cfg.fileSizeAllowed))
+			print('Failed to save')
 
 
 #DM the bot to remove a file from their account
