@@ -433,13 +433,14 @@ async def migrate(ctx):
 				print(splitName)
 				print(uID)
 			except Exception as e:
-				cfg.Log('{} failed to parse during migrate. This probably means it was not a valid username'.format(folder))
+				cfg.Log('{} failed to parse during migrate:{}'.format(folder,e))
+			
 			if uID!='':
 				try:
 					os.rename(cfg.soundsPath+'/'+folder,cfg.soundsPath+'/'+userid)
 					tempStr+=folder+' --> '+userid+'\n'
 				except Exception as e:
-					cfg.Log('Failed to rename {}\'s folder:{}'.format(username,e))
+					cfg.Log('Failed to rename {}\'s folder:{}'.format(folder,e))
 		await dm.send('The following folders have been migrated successfully:\n\n'+tempStr)
 		cfg.Log('{} Migrated the following folder successfully:\n\n{}'.format(ctx.author.name,tempStr))
 	else:
