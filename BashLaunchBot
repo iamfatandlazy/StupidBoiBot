@@ -1,0 +1,7 @@
+#!/bin/bash
+echo ####################https://github.com/iamfatandlazy/StupidBoiBot####################
+echo _____________________________________________________________________________________
+
+python3 lib/StupidBoiV2.py
+
+$SHELL
