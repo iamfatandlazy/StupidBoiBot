@@ -313,10 +313,11 @@ async def max_file_size(ctx, size):
 				
 	#If invoker is an admin user and the file size is more than 0			
 	if (str(ctx.author.id) in cfg.adminUsers) and (int(size)>0):
-	
-		JSONreader.WriteToConfig(cfg.configPath,'max_file_size',size)
-		await dm.send('Changed max file size to {} bytes'.format(size))
-		cfg.Log('{} changed the max file size to {} bytes'.format(ctx.author.name,size))
+		
+		cfg.fileSizeAllowed = size
+		JSONreader.WriteToConfig(cfg.configPath,'max_file_size',cfg.fileSizeAllowed)
+		await dm.send('Changed max file size to {} bytes'.format(cfg.fileSizeAllowed))
+		cfg.Log('{} changed the max file size to {} bytes'.format(ctx.author.name,cfg.fileSizeAllowed))
 		
 	else:
 		await dm.send('You do not have permissions to use this command!')
@@ -337,14 +338,50 @@ async def max_files_allowed(ctx, size):
 				
 				
 	if (str(ctx.author.id) in cfg.adminUsers) and (int(size)>1):
-		JSONreader.WriteToConfig(cfg.configPath,'max_sound_files',size)
-		await dm.send('Changed maximum amount of files to {}'.format(size))
-		cfg.Log('{} changed the max amount of files to {}'.format(ctx.author.name,size))
+		cfg.maxSoundFiles = size
+		JSONreader.WriteToConfig(cfg.configPath,'max_sound_files',cfg.maxSoundFiles)
+		await dm.send('Changed maximum amount of files to {}'.format(cfg.maxSoundFiles))
+		cfg.Log('{} changed the max amount of files to {}'.format(ctx.author.name,cfg.maxSoundFiles))
 	else:
 		await dm.send('You do not have permissions to use this command!')
 		cfg.Log('{} tried to use MaxFilesAllowed command'.format(ctx.author.name))	
 
+
+#Allow admin users to disabled the sound timer for specific users. 
+#Bot will play these users sound clips in full!
+@bot.command(name='ToggleSoundTimer', help='(Admin) Toggles a users max time limit on their sound files')
+async def toggle_sound_timer(ctx, _userID):
+	#Check if message is a dm
+	if ((str(ctx.channel.type) == 'private') and (ctx.author.bot != True)):
+		dm = ctx.author.dm_channel
+		if dm is None:
+			try:
+				await ctx.author.create_dm()
+				dm = ctx.author.dm_channel
+			except Exception as e:
+				cfg.Log('Error opening DM channel:'+e)
+				
+	#If command caller is an admin continue			
+	if (str(ctx.author.id) in cfg.adminUsers):
+		#if user is in no time limit list, remove them
+		if str(_userID) in cfg.noSoundTimer:
+			cfg.noSoundTimer.remove(_userID)
+			await dm.send('Enabled {}\'s sound timer'.format('<@!'+_userID+'>'))
+			cfg.Log('{} Enabled {}\'s sound timer'.format(ctx.author.name,'<@!'+_userID+'>'))
 		
+		#if user not in the list, add them to it
+		else:
+			cfg.noSoundTimer.append(_userID)
+			await dm.send('Disabled {}\'s sound timer'.format('<@!'+_userID+'>'))
+			cfg.Log('{} Disabled {}\'s sound timer'.format(ctx.author.name,'<@!'+_userID+'>'))
+		
+		JSONreader.WriteToConfig(cfg.configPath,'no_sound_timer',cfg.noSoundTimer)
+	else:
+		await dm.send('You do not have permissions to use this command!')
+		cfg.Log('{} tried to use ToggleSoundTimer command'.format(ctx.author.name))	
+
+#Debugging/upgrade commands for admins
+###########		
 #Allow admin users to re-load config file manually
 @bot.command(name='ReloadConfig', help='(Admin) Reloads configuration file manually')
 async def reload_config(ctx):
