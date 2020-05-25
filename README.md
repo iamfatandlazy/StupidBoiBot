@@ -38,8 +38,8 @@ If your commands are not working it is probably because you are not direct messa
  - **help:**              Shows this help dialog. add a command as a parameter for more info (works anywhere)
  
  - **Intro:**             Toggles your intro sound on/off
- - **AddSound:**          Attach a .mp3 file with this command as a comment to add i...
- - **RemoveSound:**       Use in conjunction with MySound to delete some of your sou...
+ - **AddSound:**          Attach a .mp3 file with this command as a comment to add it to your sounds folder
+ - **RemoveSound:**       Use in conjunction with MySound to delete some of your sound files. Accepts the filename or index of the sound to be deleted.
  - **MySounds:**          Show your indexed sound files
  
 
