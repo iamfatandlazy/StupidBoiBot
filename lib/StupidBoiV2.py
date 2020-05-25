@@ -418,13 +418,23 @@ async def migrate(ctx):
 				
 				
 	userid = str(ctx.author.id)
-	username = str(ctx.author.name+'#'+ctx.author.discriminator).lower()
 	
+	#if user is an admin
 	if (userid in cfg.adminUsers):
+		#get sound folders
 		folders = os.listdir(cfg.soundsPath)
 		tempStr = ''
 		for folder in folders:
-			if folder==username:
+			#split folder name 
+			uID = ''
+			try:
+				splitName = folder.split('#')
+				uID = str(discord.utils.get(bot.get_all_members(), name=splitName[0], discriminator=splitName[1]).id)
+				print(splitName)
+				print(uID)
+			except Exception as e:
+				cfg.Log('{} failed to parse during migrate. This probably means it was not a valid username'.format(folder))
+			if uID!='':
 				try:
 					os.rename(cfg.soundsPath+'/'+folder,cfg.soundsPath+'/'+userid)
 					tempStr+=folder+' --> '+userid+'\n'
