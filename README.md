@@ -35,7 +35,7 @@ If your commands are not working it is probably because you are not direct messa
  
  ###### All User Commands
  - **Silence:**           Silences the bot if it is currently playing audio (works anywhere)
- - **help:**              Shows this help dialog. add a command as a parameter for more info (works anywhere)
+ - **help:**              Shows this help dialog. add a command as a parameter for more info (works anywhere)<br><br>
  
  - **Intro:**             Toggles your intro sound on/off
  - **AddSound:**          Attach a .mp3 file with this command as a comment to add it to your sounds folder
