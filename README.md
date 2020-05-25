@@ -14,6 +14,8 @@ If your commands are not working it is probably because you are not direct messa
 ## Install
 - Download or clone the git repository somewhere you can access it
 - Install the dependencies as described in the `Dependencies` section
+- Create a bot using the Discord developer web portal as seen [here](https://discordpy.readthedocs.io/en/latest/discord.html)<br>
+**Note: The minimum bot permissions integer is 36703232**
 - Modify the `config.json.default` file as described in the `Configuration` section<br>
 **NOTE: Be sure to remove the `.default` suffix before launching the bot**
 - Launch the `StupidBoiV2.py` script via the `WindowsLaunchBot`, `BashLaunchBot` or other means
