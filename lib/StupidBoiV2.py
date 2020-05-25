@@ -421,26 +421,26 @@ async def migrate(ctx):
 	
 	#if user is an admin
 	if (userid in cfg.adminUsers):
+		
+		tempStr = ''
+		usersDict = {}
+		raw = bot.users
+		
+		#get dictionary with username as key and user id as value
+		for user in raw:
+			usersDict[user.name.lower()+'#'+user.discriminator] = str(user.id)
+		
 		#get sound folders
 		folders = os.listdir(cfg.soundsPath)
-		tempStr = ''
 		for folder in folders:
-			#split folder name 
-			uID = ''
-			try:
-				splitName = folder.split('#')
-				uID = str(discord.utils.get(bot.get_all_members(), name=splitName[0], discriminator=splitName[1]).id)
-				print(splitName)
-				print(uID)
-			except Exception as e:
-				cfg.Log('{} failed to parse during migrate:{}'.format(folder,e))
 			
-			if uID!='':
+			if folder in usersDict:
 				try:
-					os.rename(cfg.soundsPath+'/'+folder,cfg.soundsPath+'/'+userid)
-					tempStr+=folder+' --> '+userid+'\n'
+					os.rename(cfg.soundsPath+'/'+folder,cfg.soundsPath+'/'+usersDict[folder])
+					tempStr+=folder+' --> '+usersDict[folder]+'\n'
 				except Exception as e:
 					cfg.Log('Failed to rename {}\'s folder:{}'.format(folder,e))
+					
 		await dm.send('The following folders have been migrated successfully:\n\n'+tempStr)
 		cfg.Log('{} Migrated the following folder successfully:\n\n{}'.format(ctx.author.name,tempStr))
 	else:
@@ -503,7 +503,7 @@ async def add_sound(ctx):
 				
 		else:
 			await dm.send('Please make sure you send only .mp3 files that are under {} bytes'.format(cfg.fileSizeAllowed))
-			print('Failed to save')
+			
 
 
 #DM the bot to remove a file from their account
