@@ -474,7 +474,7 @@ async def add_sound(ctx):
 			#work through each attachment
 			for song in attatchments:
 				#check if file is within allowd size and is an mp3
-				if (int(song.size)<int(cfg.fileSizeAllowed)) and (song.fileName.endswith('.mp3')):
+				if (int(song.size)<int(cfg.fileSizeAllowed)) and (song.filename.endswith('.mp3')):
 					#check if user is allowed more files
 					if (len(files) < int(cfg.maxSoundFiles)):
 						try:
