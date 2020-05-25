@@ -18,7 +18,7 @@ fileSizeAllowed = ''
 maxSoundFiles = ''
 
 #current directory path
-fileDir = os.getcwd()
+fileDir = os.path.dirname(__file__)
 configPath = dirname(fileDir)+'/config.json'
 soundsPath = dirname(fileDir)+'/sounds'
 
