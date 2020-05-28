@@ -14,6 +14,7 @@ import discord
 from discord.ext import commands
 from discord.voice_client import VoiceClient
 import asyncio
+import time
 
 
 #read in variables from config file
@@ -96,17 +97,16 @@ async def on_voice_state_update(member,before,after):
 						cfg.Log('Failled to play {}\'s intro sound:{}'.format(member.name,e))
 						
 					#timer to allowe limited time for audio to play
-					timer = 0
 					enabledTimer = True
 					
 					#if the user is found in the noSoundTimer list disabled their timer
 					if user in cfg.noSoundTimer:
 						enabledTimer = False
+					
+					startTime = time.time()
 						
-					while (bot.voice_clients[vcVal].is_playing()and(timer<=int(cfg.soundTime))):
-						await asyncio.sleep(1)
-						if enabledTimer==True:
-							timer+=1
+					while (bot.voice_clients[vcVal].is_playing()  and  (((int(time.time()-startTime)<=int(cfg.soundTime))   or   (not enabledTimer)))):
+    						await asyncio.sleep(0.1)
 							
 					#Bot disconnects from voice channel
 					await bot.voice_clients[vcVal].disconnect()		
@@ -119,7 +119,6 @@ async def on_voice_state_update(member,before,after):
 @bot.command(name='Silence', help='Silences the bot if it is currently playing audio')
 async def silence_bot(ctx):
 	vcVal = 0
-	await ctx.message.delete()
 	for i, vc in enumerate(bot.voice_clients):
 		if vc.guild==ctx.guild:
 			vcVal = i
