@@ -91,11 +91,12 @@ async def on_voice_state_update(member,before,after):
 						#choose a random sound from their sound folder to play
 						files = os.listdir(cfg.soundsPath+'/'+user)
 						song = random.choice(files)
-						bot.voice_clients[vcVal].play(discord.FFmpegPCMAudio(cfg.soundsPath+'/'+user+'/'+song))
-						cfg.Log('Playing {}\'s intro sound: {}'.format(member.name,song))
 					except Exception as e:
 						cfg.Log('Failled to play {}\'s intro sound:{}'.format(member.name,e))
-						
+					
+					bot.voice_clients[vcVal].play(discord.FFmpegPCMAudio(cfg.soundsPath+'/'+user+'/'+song))
+					cfg.Log('Playing {}\'s intro sound: {}'.format(member.name,song))
+
 					#timer to allowe limited time for audio to play
 					enabledTimer = True
 					
@@ -106,7 +107,7 @@ async def on_voice_state_update(member,before,after):
 					startTime = time.time()
 						
 					while (bot.voice_clients[vcVal].is_playing()  and  (((int(time.time()-startTime)<=int(cfg.soundTime))   or   (not enabledTimer)))):
-    						await asyncio.sleep(1)
+    						await asyncio.sleep(0.1)
 							
 					#Bot disconnects from voice channel
 					await bot.voice_clients[vcVal].disconnect()		
