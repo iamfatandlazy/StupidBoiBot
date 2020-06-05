@@ -106,7 +106,7 @@ async def on_voice_state_update(member,before,after):
 					startTime = time.time()
 						
 					while (bot.voice_clients[vcVal].is_playing()  and  (((int(time.time()-startTime)<=int(cfg.soundTime))   or   (not enabledTimer)))):
-    						await asyncio.sleep(0.1)
+    						await asyncio.sleep(1)
 							
 					#Bot disconnects from voice channel
 					await bot.voice_clients[vcVal].disconnect()		
@@ -396,7 +396,7 @@ async def reload_config(ctx):
 				
 				
 	if (str(ctx.author.id) in cfg.adminUsers):
-		JSONreader.ReadConfig(configPath)
+		JSONreader.ReadConfig(cfg.configPath)
 	else:
 		await dm.send('You do not have permissions to use this command!')
 		cfg.Log('{} tried to use ReloadConfig command'.format(ctx.author.name))		
