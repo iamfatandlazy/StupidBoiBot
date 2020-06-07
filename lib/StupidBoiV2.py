@@ -50,7 +50,7 @@ async def on_ready():
 			
 	cfg.Log('{} has connected to Discord!'.format(bot.user))
 	
-	await bot.change_presence(activity=discord.Game(name='$help'))
+	await bot.change_presence(activity=discord.Game(name=(cfg.cmdPrefix+'help')))
 
 
 
