@@ -21,7 +21,7 @@ import time
 JSONreader.ReadConfig(cfg.configPath)
 
 #setup bot to start
-bot = commands.Bot(command_prefix=cfg.cmdPrefix)
+bot = commands.Bot(command_prefix=cfg.cmdPrefix,intents=discord.Intents.default())
 
 cfg.Log('IAmFatAndLazy\'s StupidBoiV2 is launching...')
 
