@@ -1,3 +1,6 @@
+# New Docker image available!
+See the new section DOCKER at the bottom of the read me for more information
+
 # StupidBoiBotV2
 *Stupid Discord bot that I created because I couldn't find something like it already implemented.* <br>
 *StupidBoiBotV2 converts this bot from a personal project with spaghetti code and lots of issues into a more refined, readable, functional, and feature filled bot. It's far from perfect and I can't gurantee the speed at which it will advance; however any and all issues should be brought up via Github or through a direct message to me on Discord at `IAmFatAndLazy#9850`* <br><br>
@@ -78,6 +81,10 @@ Make sure you are in the `admin_user` list to be able to use all commands! The f
 - `FFmpegPCMAudio`  Make sure this is added to your system path!
 - `PyNacl`
 
+### Docker
+I haven't touched this project in a long while but I was looking to move this bot into a docker image so I could move it more easily through my current infrastructure. As such, there is now a Dockerfile in this git repo for you to build yourself, or an image on Dockerhub for you to pull down! You can get the docker image (along with instructions on running the bot) over there at https://hub.docker.com/r/iamfatandlazy/stupidboiv2
+
+As I state in the instructions on Dockerhub, this simplified the build by a large margin. I take care of getting you setup with all the dependencies and OS and all you need to do is configure your config.json and point one Docker volume at it, and then point a second Docker volume to a location the bot can save it's sounds too. As I write this it is almost 2AM, so I will try to get a few screenshots or screen recording of the new process soon.
 You can use `pip install discord.py pynacl` to get those two packages.<br>
 FFMpeg can be acquired from their website [here](https://www.ffmpeg.org/download.html) 
 
