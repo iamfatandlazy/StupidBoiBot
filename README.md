@@ -81,7 +81,9 @@ Make sure you are in the `admin_user` list to be able to use all commands! The f
 - `FFmpegPCMAudio`  Make sure this is added to your system path!
 - `PyNacl`
 
-### Docker
+
+## Docker
+
 I haven't touched this project in a long while but I was looking to move this bot into a docker image so I could move it more easily through my current infrastructure. As such, there is now a Dockerfile in this git repo for you to build yourself, or an image on Dockerhub for you to pull down! You can get the docker image (along with instructions on running the bot) over there at https://hub.docker.com/r/iamfatandlazy/stupidboiv2
 
 As I state in the instructions on Dockerhub, this simplified the build by a large margin. I take care of getting you setup with all the dependencies and OS and all you need to do is configure your config.json and point one Docker volume at it, and then point a second Docker volume to a location the bot can save it's sounds too. As I write this it is almost 2AM, so I will try to get a few screenshots or screen recording of the new process soon.
