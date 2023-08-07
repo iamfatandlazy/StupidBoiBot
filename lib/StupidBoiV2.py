@@ -7,6 +7,7 @@ import JSONreader
 
 import sys
 import os
+import subprocess
 import random
 
 #Discord.py specific 
@@ -398,6 +399,7 @@ async def reload_config(ctx):
 				
 	if (str(ctx.author.id) in cfg.adminUsers):
 		JSONreader.ReadConfig(cfg.configPath)
+		await dm.send("Reloaded configuration.")
 	else:
 		await dm.send('You do not have permissions to use this command!')
 		cfg.Log('{} tried to use ReloadConfig command'.format(ctx.author.name))		
@@ -490,9 +492,14 @@ async def add_sound(ctx):
 					if (len(files) < int(cfg.maxSoundFiles)):
 						try:
 							fileName = cfg.soundsPath+'/' + user + '/' + song.filename.lower()
-							cfg.Log('{}\'s file {} being saved'.format(user,song.filename))
+							NormalizedFileName = cfg.soundsPath+'/' + user + '/' + 'Normalized-'+song.filename.lower()
+							cfg.Log(('{}\'s file {} being saved'.format(user,song.filename)))
 							await song.save(fileName)
-							cfg.Log('saved {} to {}\'s sound folder'.format(song.filename,user))
+							cfg.Log(('saved {} to {}\'s sound folder'.format(song.filename,user)))
+							#Attempt to normalize the audio level
+							cfg.Log('Attempting to normalize audio level of {}'.format(song.filename))
+							subprocess.run(['ffmpeg','-i',fileName,'-filter:a','loudnorm',NormalizedFileName], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+							os.remove(fileName)
 							await dm.send('Your intro sound number {} was saved to your folder!'.format(len(files)+1))
 						except Exception as e:
 							cfg.Log('Error saving sound:'+e)
